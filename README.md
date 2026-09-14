@@ -47,6 +47,19 @@ python -m venv .venv
 
 Open http://localhost:8000. A full run takes 30 to 50 minutes (the design tournament is most of it).
 
+## Walkthrough video
+
+A 2 minute 26 second narrated walkthrough of one real run, with subtitles: [AdForge_Demo.mov](https://github.com/nimayshah123/adforge/releases/tag/v0.1-demo)
+
+It is rendered from the replay itself, frame by frame, so it can be rebuilt after any new run:
+
+```bash
+ELEVENLABS_API_KEY=... .venv/Scripts/python video/tts.py     # narration per scene, with character timings
+.venv/Scripts/python video/build_site.py                      # stage page, docs viewer, timeline and captions
+.venv/Scripts/python video/render.py frames                   # one H.264 segment per scene
+.venv/Scripts/python video/render.py mux AdForge_Demo.mov     # voice + mov_text subtitles + .srt sidecar
+```
+
 ## Public replay site
 
 The pipeline cannot run on Vercel (subscription CLI auth, 30 minute runs, Chromium), so finished runs are published as a static replay: https://adforge-replay.vercel.app
