@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdForge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#fff; --ink:#16181d; --muted:#6b6f78; --line:#e4e2dc;
+  --accent:#2f5bff; --ok:#1f9d55; --warn:#c77700; --err:#d23b3b; --chip:#efede8;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}
+header{padding:18px 24px;border-bottom:1px solid var(--line);background:var(--panel);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.logo{font-weight:700;font-size:17px;letter-spacing:-.02em;margin-right:8px}
+.logo span{color:var(--accent)}
+#desc{flex:1;min-width:280px;font:inherit;font-size:15px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+#desc:focus{outline:2px solid var(--accent);outline-offset:-1px;background:#fff}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11px 18px;background:var(--ink);color:#fff;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+select{font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;max-width:260px}
+main{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 76px)}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+#trace{border-right:1px solid var(--line);padding:18px;background:var(--panel);overflow:auto}
+.trace-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.trace-head h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+#clock{font-family:var(--mono);font-size:13px}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.step .row{display:flex;gap:10px;align-items:flex-start}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex:none;background:var(--line)}
+.dot.start{background:var(--accent);animation:pulse 1s infinite}
+.dot.done{background:var(--ok)} .dot.retry{background:var(--warn)} .dot.error{background:var(--err)}
+@keyframes pulse{50%{opacity:.3}}
+.step .label{font-weight:500}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px}
+.retry-note{margin:6px 0 0 20px;padding:6px 8px;border-left:2px solid var(--warn);background:#fff8ec;font-family:var(--mono);font-size:11px;white-space:pre-wrap;color:#6a4a00}
+.err-note{border-color:var(--err);background:#fdeeee;color:#7a1f1f}
+#results{padding:20px 28px;overflow:auto}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:18px}
+.tab{background:transparent;color:var(--muted);padding:7px 12px;border-radius:8px;font-weight:500}
+.tab.on{background:var(--ink);color:#fff}
+.tab:disabled{opacity:.35}
+.empty{color:var(--muted);padding:60px 0;text-align:center}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+h3{margin:0 0 8px;font-size:15px}
+h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:2px 10px;margin:2px 4px 2px 0;font-size:12.5px}
+.assume li{background:#fff8ec;border-radius:6px;padding:4px 8px;margin-bottom:4px;list-style:none}
+.assume{padding:0;margin:0}
+table{border-collapse:collapse;width:100%}
+td,th{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:500}
+a{color:var(--accent)}
+.big{font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.bar{height:8px;background:var(--chip);border-radius:4px;overflow:hidden;margin-top:4px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.swatch{display:inline-flex;align-items:center;gap:6px;margin-right:14px}
+.swatch i{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);display:inline-block}
+/* meta preview */
+.fb{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;max-width:420px}
+.fb-top{display:flex;gap:10px;align-items:center;padding:12px}
+.fb-av{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
+.fb-name{font-weight:600;font-size:13.5px} .fb-sp{font-size:12px;color:var(--muted)}
+.fb-text{padding:0 12px 10px;font-size:14px}
+.fb img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:var(--chip)}
+.fb-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:#f2f3f5}
+.fb-hl{font-weight:600;font-size:14px} .fb-ds{font-size:12.5px;color:var(--muted)}
+.fb-cta{background:#e4e6eb;color:#050505;border-radius:6px;padding:7px 12px;font-weight:600;font-size:13px;white-space:nowrap}
+.count{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.count.over{color:var(--err);font-weight:600}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;border-radius:6px;padding:2px 8px}
+.badge.pass{background:#e6f6ec;color:var(--ok)} .badge.fail{background:#fdeeee;color:var(--err)} .badge.fixed{background:#eef2ff;color:var(--accent)}
+/* google preview */
+.serp{max-width:640px;font-family:arial,sans-serif}
+.serp .sp{font-size:12px;font-weight:700}
+.serp .url{font-size:13px;color:#202124}
+.serp .t{color:#1a0dab;font-size:20px;line-height:1.3;margin:4px 0}
+.serp .d{color:#4d5156;font-size:14px}
+iframe{width:100%;height:75vh;border:1px solid var(--line);border-radius:12px;background:#fff}
+.mono{font-family:var(--mono);font-size:12px;word-break:break-all}
+.variants{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.variant{width:128px;font-size:11px;color:var(--muted)}
+.variant img{width:128px;height:128px;border-radius:8px;border:2px solid transparent;display:block;cursor:zoom-in}
+.variant.win img{border-color:var(--ok)}
+.variant b{color:var(--ink)}
+.board{width:100%;border-radius:12px;display:block}
+#zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:9;cursor:zoom-out}
+#zoom img{max-width:92vw;max-height:92vh;border-radius:8px}
+[hidden]{display:none !important}
+#banner{background:var(--ink);color:#fff;padding:9px 24px;font-size:13px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+#banner a{color:#9fb4ff}
+#banner button{padding:5px 12px;font-size:12px;background:#fff;color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="banner" hidden>
+  <span><b>Replay of a recorded run.</b> No live model calls here; the pipeline runs locally on Claude Code. Bean Drop is a fictional brand made up for the demo.</span>
+  <button id="skip">Skip to the end</button>
+  <button id="replay">Replay</button>
+</div>
+<header>
+  <div class="logo">Ad<span>Forge</span></div>
+  <input id="desc" placeholder="Describe the campaign in one line, e.g. Get remote workers in Austin to subscribe to our $40/month cold brew delivery">
+  <button id="go">Build campaign</button>
+  <select id="past"><option value="">Past runs</option></select>
+</header>
+<main>
+  <section id="trace">
+    <div class="trace-head"><h2>Agent trace</h2><span id="clock"></span></div>
+    <button id="resume" hidden style="width:100%;margin-bottom:10px">Resume from last saved step</button>
+    <div id="steps"><p class="empty" style="padding:20px 0">Each agent step shows up here as it runs.</p></div>
+    <div id="totals" class="meta"></div>
+  </section>
+  <section id="results">
+    <div class="tabs" id="tabs"></div>
+    <div id="view"><p class="empty">One sentence in. Brief, research, strategy, ads, images, landing page and export out.</p></div>
+  </section>
+</main>
+<div id="zoom" hidden onclick="this.hidden=true"><img></div>
+<script>
+document.addEventListener('click', e => { if (e.target.matches('.variant img, .board')) { $('#zoom img').src = e.target.src; $('#zoom').hidden = false; } });
+const TABS = [
+  ['brief','Brief'],['research','Research'],['strategy','Strategy'],['direction','Moodboard'],['meta','Meta ads'],
+  ['google','Google ads'],['landing','Landing page'],['critic','Critic'],['plan','Launch kit']
+];
+let S = null, current = null, pinned = false, es = null, clockTimer = null;
+const STATIC = !!window.ADFORGE_STATIC;
+const RUNBASE = STATIC ? 'runs/' : '/runs/';
+const getRuns = () => fetch(STATIC ? 'runs/index.json' : '/api/runs').then(r => r.json());
+const getRun = id => fetch(STATIC ? `runs/${id}/run.json` : '/api/runs/' + id).then(r => r.json());
+let revealed = null, replayToken = 0;  // static replay: which result tabs have been reached
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const count = (s, n) => `<span class="count ${s.length > n ? 'over' : ''}">${s.length}/${n}</span>`;
+
+async function refreshPast(){
+  const runs = await getRuns();
+  $('#past').innerHTML = '<option value="">Past runs</option>' +
+    runs.map(r => `<option value="${r.id}">${esc(r.description.slice(0,60))} (${r.status})</option>`).join('');
+}
+
+$('#go').onclick = async () => {
+  const d = $('#desc').value.trim(); if (!d) return;
+  $('#go').disabled = true;
+  const r = await (await fetch('/api/runs', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({description: d})})).json();
+  open(r.id);
+};
+$('#desc').addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); });
+$('#past').onchange = e => e.target.value && open(e.target.value);
+
+async function open(id){
+  if (STATIC) return replay(id);
+  if (es) es.close();
+  S = await getRun(id);
+  S.events = []; current = null; pinned = false;
+  $('#desc').value = S.description;
+  $('#steps').innerHTML = '';
+  steps = {};
+  es = new EventSource(`/api/runs/${id}/events`);
+  es.onmessage = async m => {
+    const ev = JSON.parse(m.data);
+    onEvent(ev);
+    if (ev.type === 'artifact') {
+      S = await getRun(id);
+      if (!pinned) current = ev.key === 'creatives' ? 'meta' : ev.key;
+      renderTabs(); renderView();
+    }
+    if (ev.type === 'done' || ev.type === 'error') {
+      es.close(); $('#go').disabled = false; clearInterval(clockTimer);
+      S = await getRun(id);
+      renderTotals(); renderTabs(); renderView(); refreshPast();
+    }
+  };
+  renderTabs(); renderView();
+  $('#resume').hidden = !['interrupted', 'error'].includes(S.status);
+  $('#resume').onclick = async () => { $('#resume').hidden = true; await fetch(`/api/runs/${id}/resume`, {method: 'POST'}); open(id); };
+  const t0 = S.started;
+  clearInterval(clockTimer);
+  if (S.status === 'running') clockTimer = setInterval(() => $('#clock').textContent = fmt(Date.now()/1000 - t0), 200);
+  else $('#clock').textContent = S.finished ? fmt(S.finished - t0) : S.status;
+}
+const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+
+// Static hosting: play the recorded events back with gaps compressed.
+async function replay(id, instant = false){
+  const token = ++replayToken;
+  S = await getRun(id);
+  const events = S.events;
+  $('#desc').value = S.description;
+  $('#steps').innerHTML = ''; steps = {}; $('#totals').innerHTML = '';
+  revealed = new Set(); current = null; pinned = false;
+  renderTabs(); $('#view').innerHTML = '<p class="empty">Replaying the run. Results appear here as each step finishes.</p>';
+  let prev = 0;
+  for (const ev of events) {
+    if (!instant) await new Promise(r => setTimeout(r, Math.min(Math.max((ev.t - prev) * 25, 60), 900)));
+    if (token !== replayToken) return;  // a newer replay or skip started while we waited
+    prev = ev.t;
+    onEvent(ev);
+    $('#clock').textContent = fmt(ev.t);
+    if (ev.type === 'artifact') {
+      revealed.add(ev.key === 'creatives' ? 'meta' : ev.key);
+      if (!pinned) current = ev.key === 'creatives' ? 'meta' : ev.key;
+      if (!instant) { renderTabs(); renderView(); }
+    }
+  }
+  if (token !== replayToken) return;
+  revealed = null;
+  renderTotals(); renderTabs(); renderView();
+  if (S.stitched_from) $('#totals').insertAdjacentHTML('beforeend', '<br><br>Brief to landing page stages come from an earlier run with the same one-line brief; this run resumed from those saved results. Clock shows working time, downtime between interrupted segments removed.');
+}
+
+let steps = {};
+function onEvent(ev){
+  if (ev.type === 'error') {
+    $('#steps').insertAdjacentHTML('beforeend', `<div class="step"><div class="row"><i class="dot error"></i><div class="label">Run failed</div></div><div class="retry-note err-note">${esc(ev.detail)}</div></div>`);
+    return;
+  }
+  if (ev.type === 'resume') {
+    $('#steps').insertAdjacentHTML('beforeend', `<div class="step"><div class="row"><i class="dot retry"></i><div class="label">Resumed at ${fmt(ev.t)}, skipping saved steps</div></div></div>`);
+    return;
+  }
+  if (ev.type !== 'step') return;
+  let el = steps[ev.step];
+  if (!el) {
+    el = document.createElement('div'); el.className = 'step';
+    el.innerHTML = `<div class="row"><i class="dot"></i><div><div class="label"></div><div class="meta"></div></div></div>`;
+    $('#steps').appendChild(el); steps[ev.step] = el;
+  }
+  el.querySelector('.dot').className = 'dot ' + ev.status;
+  if (ev.status !== 'retry') el.querySelector('.label').textContent = ev.label;
+  if (ev.status === 'start') el.querySelector('.meta').textContent = `started at ${fmt(ev.t)}`;
+  if (ev.status === 'retry' || ev.status === 'error') {
+    el.insertAdjacentHTML('beforeend', `<div class="retry-note ${ev.status==='error'?'err-note':''}">${esc(ev.label)}${ev.detail ? '\n' + esc(ev.detail) : ''}</div>`);
+  }
+  if (ev.status === 'done' && ev.meta) {
+    const m = ev.meta;
+    el.querySelector('.meta').textContent = [m.model, `${m.seconds}s`, `${m.turns} turns`,
+      m.attempts > 1 ? `${m.attempts} attempts` : '', m.web_searches ? `${m.web_searches} web searches` : '',
+      `${((m.input_tokens + m.output_tokens)/1000).toFixed(1)}K tok`].filter(Boolean).join(' · ');
+    el.querySelector('.dot').className = 'dot done';
+  }
+}
+function renderTotals(){
+  const st = Object.values(S.steps || {});
+  if (!st.length) return;
+  const sum = k => st.reduce((a, m) => a + (m[k] || 0), 0);
+  $('#totals').innerHTML = `<br>${st.length} model steps · ${sum('web_searches')} web searches · ${((sum('input_tokens')+sum('output_tokens'))/1000).toFixed(0)}K tokens · list price $${sum('list_price_usd').toFixed(2)} (billed to subscription)`;
+}
+
+function renderTabs(){
+  $('#tabs').innerHTML = TABS.map(([k, l]) =>
+    `<button class="tab ${current===k?'on':''}" ${S && S[k] && (!revealed || revealed.has(k)) ? '' : 'disabled'} data-k="${k}">${l}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => { current = b.dataset.k; pinned = true; renderTabs(); renderView(); });
+}
+
+const V = {
+  brief(b){ return `<div class="card"><h3>${esc(b.brand_name)}: ${esc(b.product)}</h3><p>${esc(b.what_it_is)}</p>
+    <dl class="kv"><dt>Audience</dt><dd>${esc(b.audience)}</dd><dt>Goal</dt><dd>${esc(b.goal)}</dd><dt>Offer</dt><dd>${esc(b.offer)}</dd>
+    <dt>Geo</dt><dd>${b.geo.map(g=>`<span class="chip">${esc(g)}</span>`).join('')}</dd><dt>Budget</dt><dd>$${b.monthly_budget_usd}/month</dd><dt>Tone</dt><dd>${esc(b.tone)}</dd></dl></div>
+    <div class="card"><h4 style="margin-top:0">Assumptions the agent made (not in your sentence)</h4><ul class="assume">${b.assumptions.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`; },
+
+  research(r){ return `<div class="card"><h3>Market</h3><p>${esc(r.market_summary)}</p></div>
+    <div class="card"><h3>Competitors</h3><table><tr><th>Name</th><th>Positioning</th><th>Pricing</th><th>Their ad angle</th></tr>
+    ${r.competitors.map(c=>`<tr><td><a href="${esc(c.url)}" target="_blank">${esc(c.name)}</a></td><td>${esc(c.positioning)}</td><td>${esc(c.pricing)}</td><td>${esc(c.ad_angle)}</td></tr>`).join('')}</table></div>
+    <div class="card"><h3>Audience insights</h3><ul>${r.audience_insights.map(i=>`<li>${esc(i.insight)} <a href="${esc(i.source_url)}" target="_blank">source</a></li>`).join('')}</ul>
+    <h4>Keyword ideas</h4>${r.keyword_ideas.map(k=>`<span class="chip">${esc(k)}</span>`).join('')}
+    <h4>Policy flags</h4><ul>${r.policy_flags.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>`; },
+
+  strategy(s){ const bk = s.brand_kit; return `<div class="card"><h4 style="margin-top:0">Big idea</h4><div class="big">${esc(s.big_idea)}</div><p>${esc(s.positioning)}</p>
+    ${s.value_props.map(v=>`<span class="chip">${esc(v)}</span>`).join('')}</div>
+    <div class="grid">${s.segments.map(g=>`<div class="card"><span class="chip">${esc(g.id)}</span><h3>${esc(g.name)}</h3><p>${esc(g.who)}</p>
+      <h4>Pain</h4><p>${esc(g.pain)}</p><h4>Message</h4><p><b>${esc(g.message)}</b></p>
+      <h4>Meta targeting</h4><p class="meta">Age ${g.meta_targeting.age_min}-${g.meta_targeting.age_max} · ${esc(g.meta_targeting.locations.join(', '))}<br>${esc(g.meta_targeting.interests.join(', '))}</p></div>`).join('')}</div>
+    <div class="card"><h3>Channels</h3>${s.channels.map(c=>`<p><b>${esc(c.channel)}</b> ${Math.round(c.budget_share*100)}% · ${esc(c.objective)}<div class="bar"><i style="width:${c.budget_share*100}%"></i></div><span class="meta">${esc(c.rationale)}</span></p>`).join('')}
+    <h4>KPIs</h4><table>${s.kpis.map(k=>`<tr><td><b>${esc(k.metric)}</b></td><td>${esc(k.target)}</td><td class="meta">${esc(k.why)}</td></tr>`).join('')}</table>
+    <h4>Brand kit</h4>${['background','primary','accent','text'].map(c=>`<span class="swatch"><i style="background:${esc(bk[c])}"></i>${c} <span class="mono">${esc(bk[c])}</span></span>`).join('')}
+    <p>${esc(bk.headline_font)} / ${esc(bk.body_font)} · ${esc(bk.visual_style)}</p></div>`; },
+
+  direction(d){ return `<div class="card"><h3>What the Pinterest references do</h3><ul>${d.observed.map(o=>`<li>${esc(o)}</li>`).join('')}</ul>
+    <h4>Category cliches to avoid</h4><ul>${d.category_cliches.map(o=>`<li>${esc(o)}</li>`).join('')}</ul></div>
+    <div class="grid">${d.directions.map((x,k)=>`<div class="card"><span class="chip">direction ${k+1}</span><h3>${esc(x.name)}</h3><p>${esc(x.concept)}</p>
+      <h4>Layout</h4><p>${esc(x.layout)}</p><h4>Type</h4><p>${esc(x.typography)}</p><h4>Color</h4><p>${esc(x.color)}</p><h4>CSS techniques</h4><p class="meta">${esc(x.css_techniques)}</p></div>`).join('')}</div>
+    ${(d.boards||[]).length ? d.boards.map(b=>`<div class="card"><h3>Pinterest: ${esc(b.query)}</h3><p class="meta">Style reference only, nothing from these pins goes into the ads.</p>${b.sheet ? `<img class="board" src="${RUNBASE}${S.id}/${b.sheet}">` : '<p class="meta">Contact sheet not published: the pins are other people\'s work, used only as private style reference.</p>'}</div>`).join('')
+      : '<div class="card"><p>Pinterest could not be loaded for this run; directions came from the model alone.</p></div>'}`; },
+
+  meta(m){
+    const segs = Object.fromEntries((S.strategy?.segments||[]).map(g=>[g.id,g]));
+    const verdict = id => (S.critic?.verdicts||[]).find(v=>v.asset_id===id);
+    return `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr))">${m.ads.map((a,i)=>{
+      const c = (S.creatives||[])[i]; const v = verdict('m'+(i+1));
+      return `<div><p><span class="chip">${esc(segs[a.segment_id]?.name || a.segment_id)}</span>
+        ${v ? `<span class="badge ${v.passed?'pass':'fail'}">critic: ${v.passed?'pass':'fail'}</span>` : ''}
+        ${c?.fixed ? '<span class="badge fixed">fixed after critic</span>' : ''}</p>
+      <div class="fb"><div class="fb-top"><div class="fb-av">${esc((S.brief?.brand_name||'?')[0])}</div><div><div class="fb-name">${esc(S.brief?.brand_name)}</div><div class="fb-sp">Sponsored</div></div></div>
+      <div class="fb-text">${esc(a.primary_text)}</div>
+      ${c ? `<img src="${RUNBASE}${S.id}/${c.png}${STATIC ? '' : '?v=' + Date.now()}">` : '<img alt="">'}
+      <div class="fb-foot"><div><div class="fb-ds">${esc(location.host)}</div><div class="fb-hl">${esc(a.headline)}</div><div class="fb-ds">${esc(a.description)}</div></div><div class="fb-cta">${esc(a.cta.replace(/_/g,' ').toLowerCase().replace(/^./,x=>x.toUpperCase()))}</div></div></div>
+      <p class="meta">primary ${count(a.primary_text,125)} · headline ${count(a.headline,40)} · description ${count(a.description,30)}</p>
+      <p class="meta">${esc(a.angle)}</p>
+      ${c?.variants ? `<h4>Design tournament${c.judge_score ? ` (winner scored ${c.judge_score}/10)` : ''}</h4><div class="variants">${c.variants.map(v=>`<div class="variant ${v.winner?'win':''}">
+        <img src="${RUNBASE}${S.id}/${v.png}${STATIC ? '' : '?v=' + Date.now()}">${esc(v.tag === 'final' ? (v.lost_rematch ? 'polish, lost rematch' : 'polish, won rematch') : v.tag === 'fix' ? 'critic fix' : 'design ' + v.tag)}${v.winner ? ' <b>(shipped)</b>' : ''}
+        ${v.score ? `<br><b>${v.score.overall}/10</b> stop ${v.score.stop_power} · legible ${v.score.legibility}` : ''}<br>${esc(v.direction)}</div>`).join('')}</div>` : ''}
+      </div>`}).join('')}</div>`; },
+
+  google(g){ return `<div class="card"><h3>${esc(g.campaign_name)}</h3><h4>Negative keywords</h4>${g.negative_keywords.map(k=>`<span class="chip">-${esc(k)}</span>`).join('')}</div>
+    ${g.ad_groups.map((a,i)=>{ const v=(S.critic?.verdicts||[]).find(x=>x.asset_id==='g'+(i+1)); return `<div class="card"><h3>${esc(a.name)} ${v?`<span class="badge ${v.passed?'pass':'fail'}">critic: ${v.passed?'pass':'fail'}</span>`:''}</h3>
+      <div class="serp card" style="margin:10px 0"><div class="sp">Sponsored</div><div class="url">${esc(location.host)} › ${esc(a.path1)} › ${esc(a.path2)}</div>
+      <div class="t">${esc(a.headlines.slice(0,3).join(' | '))}</div><div class="d">${esc(a.descriptions.slice(0,2).join(' '))}</div></div>
+      <h4>Keywords</h4>${a.keywords.map(k=>`<span class="chip">${k.match==='exact'?'['+esc(k.text)+']':k.match==='phrase'?'"'+esc(k.text)+'"':esc(k.text)}</span>`).join('')}
+      <div class="grid" style="margin-top:10px"><div><h4>15 headlines</h4><table>${a.headlines.map(h=>`<tr><td>${esc(h)}</td><td>${count(h,30)}</td></tr>`).join('')}</table></div>
+      <div><h4>4 descriptions</h4><table>${a.descriptions.map(d=>`<tr><td>${esc(d)}</td><td>${count(d,90)}</td></tr>`).join('')}</table></div></div></div>`}).join('')}`; },
+
+  landing(l){ return `<p><a href="${l.url}" target="_blank">Open in new tab</a></p><iframe src="${l.url}"></iframe>`; },
+
+  critic(c){ return `<div class="card"><p>${esc(c.overall)}</p></div>${c.verdicts.map(v=>`<div class="card"><h3>${esc(v.asset_id)} <span class="badge ${v.passed?'pass':'fail'}">${v.passed?'pass':'fail'}</span> ${v.fix!=='none'?`<span class="chip">fix: ${esc(v.fix)}</span>`:''}</h3>
+    ${v.issues.length?`<ul>${v.issues.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`:''}${v.instructions?`<p class="meta">${esc(v.instructions)}</p>`:''}</div>`).join('')}`; },
+
+  plan(p){ return `<div class="card"><h3>Launch kit</h3><p><a href="${p.export}"><button>Download campaign zip</button></a></p>
+    <p class="meta">campaign.json · meta_ads.csv · google_ads.csv (Google Ads Editor columns) · creatives/*.png · landing/index.html</p></div>
+    <div class="card"><h3>Budget ($${p.monthly_budget_usd}/month)</h3><table><tr><th>Channel</th><th>Monthly</th><th>Daily</th><th>Objective</th></tr>
+    ${p.channels.map(c=>`<tr><td>${esc(c.channel)}</td><td>$${c.monthly_usd}</td><td>$${c.daily_usd}</td><td>${esc(c.objective)}</td></tr>`).join('')}</table></div>
+    <div class="card"><h3>Tracked links</h3><h4>Meta</h4>${p.meta_links.map(l=>`<p class="mono"><a href="${esc(l)}" target="_blank">${esc(l)}</a></p>`).join('')}
+    <h4>Google</h4>${p.google_links.map(l=>`<p class="mono"><a href="${esc(l)}" target="_blank">${esc(l)}</a></p>`).join('')}</div>`; },
+};
+
+function renderView(){
+  if (!S || !current || !S[current]) {
+    if (S && S.status === 'running') $('#view').innerHTML = '<p class="empty">Working. Results appear here as each step finishes.</p>';
+    return;
+  }
+  $('#view').innerHTML = V[current](S[current]);
+}
+if (STATIC) {
+  $('#banner').hidden = false;
+  $('#go').hidden = true;
+  $('#desc').readOnly = true;
+  $('#skip').onclick = () => replay($('#past').value || S.id, true);
+  $('#replay').onclick = () => replay($('#past').value || S.id);
+  refreshPast().then(async () => { const runs = await getRuns(); if (runs.length) { $('#past').value = runs[0].id; replay(runs[0].id); } });
+} else {
+  refreshPast();
+}
+</script>
+</body>
+</html>
