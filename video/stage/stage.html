@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#f3ede3;--ink:#1c1b19;--muted:#8a8378;--accent:#2f5bff}
+*{box-sizing:border-box}
+body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--cream);font-family:Inter,system-ui,sans-serif;color:var(--ink)}
+.card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.wave{display:flex;gap:5px;align-items:flex-end;height:26px;margin-bottom:14px}
+.wave i{width:4px;background:#b9a98e;border-radius:2px}
+.label{font-size:15px;letter-spacing:.28em;color:#a8998a;font-weight:600;display:flex;align-items:center;gap:14px}
+.label:before,.label:after{content:"";width:44px;height:1px;background:#cdbfae}
+.logo{font-size:118px;font-weight:800;letter-spacing:-.045em;margin:34px 0 10px}
+.logo span{color:var(--accent)}
+.tag{font-size:40px;font-weight:500;letter-spacing:-.01em;color:#3a3833}
+.end-big{font-size:74px;font-weight:800;letter-spacing:-.035em;line-height:1.1;margin:30px 0 40px}
+.links{display:flex;flex-direction:column;gap:14px;font-family:'JetBrains Mono',monospace;font-size:30px;color:#3a3833}
+.links b{color:var(--accent);font-weight:500}
+#laptop{position:absolute;left:298px;top:70px;width:1324px}
+.screen{background:#1d1d1f;border-radius:22px;padding:14px 14px 14px;box-shadow:0 30px 80px rgba(60,40,10,.18)}
+.bar{height:38px;background:#f1f1f3;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:8px;padding:0 14px}
+.bar i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.url{margin-left:22px;flex:1;max-width:620px;height:24px;border-radius:7px;background:#fff;font-size:13px;color:#6b6b70;display:flex;align-items:center;padding:0 12px}
+.viewport{width:1296px;height:810px;overflow:hidden;position:relative;background:#fff;border-radius:0 0 8px 8px}
+.viewport iframe{position:absolute;left:0;top:0;width:1280px;height:800px;border:0;transform:scale(1.0125);transform-origin:0 0}
+.base{width:1520px;height:20px;margin:0 0 0 -98px;background:linear-gradient(#d9d4cb,#bfb8ad);border-radius:0 0 26px 26px}
+#chip{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-size:17px;font-weight:600;letter-spacing:.04em;color:#6d6558;background:#e9e1d4;border-radius:999px;padding:7px 18px;white-space:pre}
+#caption{position:absolute;left:50%;top:1002px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:#2a2723;color:#f7f3ec;border-radius:999px;padding:12px 26px;font-size:24px;font-weight:500;max-width:1500px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+#caption i{width:9px;height:9px;border-radius:50%;background:#e0a35c;flex:none}
+.card #cardcap{font-size:34px;line-height:1.45;max-width:1100px;font-weight:500;color:#2d2b27;margin-top:36px;min-height:100px}
+#ring{position:absolute;border:4px solid var(--accent);border-radius:12px;box-shadow:0 0 0 6px rgba(47,91,255,.18);pointer-events:none}
+#fade{position:absolute;inset:0;background:var(--cream);pointer-events:none}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="intro" class="card">
+  <div class="wave"><i style="height:10px"></i><i style="height:20px"></i><i style="height:14px"></i><i style="height:26px"></i><i style="height:12px"></i><i style="height:18px"></i></div>
+  <div class="label">A REAL RUN</div>
+  <div class="logo">Ad<span>Forge</span></div>
+  <div class="tag">One sentence in. A launch-ready ad campaign out.</div>
+</div>
+<div id="end" class="card" hidden>
+  <div class="label">BUILT ON CLAUDE CODE HEADLESS</div>
+  <div class="end-big">33 model steps.<br>One sentence in.</div>
+  <div class="links"><div><b>github.com/</b>nimayshah123/adforge</div><div><b>adforge-replay</b>.vercel.app</div></div>
+</div>
+<div id="laptop" hidden>
+  <div class="screen">
+    <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="url" id="url">adforge-replay.vercel.app</div></div>
+    <div class="viewport">
+      <iframe id="app" src="app/index.html?noauto"></iframe>
+      <iframe id="docs" src="docs.html" hidden></iframe>
+    </div>
+  </div>
+  <div class="base"></div>
+</div>
+<div id="chip" hidden></div>
+<div id="ring" hidden></div>
+<div id="caption" hidden><i></i><span></span></div>
+<div id="fade" style="opacity:0"></div>
+<script>
+const $ = s => document.querySelector(s);
+let TL, win, doc, dwin, ddoc, current = -1, ctx = {};
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x);
+const SCALE = 1.0125;
+
+window.setup = async () => {
+  TL = await (await fetch('timeline.json')).json();
+  await new Promise(r => { const f = $('#app'); if (f.contentWindow.document.readyState === 'complete') r(); else f.onload = r; });
+  win = $('#app').contentWindow; doc = win.document;
+  for (let i = 0; i < 100 && !(win.replay && win.showUpTo); i++) await new Promise(r => setTimeout(r, 100));
+  const st = doc.createElement('style');
+  st.textContent = `#banner{display:none!important} main{height:calc(100vh - 77px)!important;min-height:0!important}
+    #trace,#results{overflow:auto!important;height:100%} ::-webkit-scrollbar{width:0;height:0}`;
+  doc.head.appendChild(st);
+  doc.querySelector('#go').hidden = false;
+  await win.replay(TL.run, true);
+  // warm every tab once so images are decoded before recording
+  for (const k of ['brief','research','strategy','direction','meta','google','landing','critic','plan']) { win.showTab(k); await new Promise(r => setTimeout(r, 250)); }
+  dwin = $('#docs').contentWindow; ddoc = dwin.document;
+  for (let i = 0; i < 100 && !dwin.docsReady; i++) await new Promise(r => setTimeout(r, 100));
+  return TL.total;
+};
+
+function offsetIn(scroller, el) {
+  return el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+}
+
+window.apply = async idx => {
+  const sc = TL.scenes[idx]; current = idx; ctx = {};
+  $('#intro').hidden = sc.view !== 'card';
+  $('#end').hidden = sc.view !== 'end';
+  $('#laptop').hidden = !['app', 'docs'].includes(sc.view);
+  $('#app').hidden = sc.view !== 'app';
+  $('#docs').hidden = sc.view !== 'docs';
+  $('#chip').hidden = !sc.chip; $('#chip').textContent = sc.chip;
+  $('#url').textContent = sc.view === 'docs' ? 'adforge-replay.vercel.app/runs/test-3/export.zip' : 'adforge-replay.vercel.app';
+  if (sc.view === 'app') {
+    win.showUpTo(sc.cut);
+    win.showTab(sc.tab);
+    const res = doc.querySelector('#results'), tr = doc.querySelector('#trace');
+    res.scrollTop = 0;
+    await new Promise(r => setTimeout(r, 300));
+    if (sc.scroll) {
+      const el = doc.querySelector(sc.scroll[2]);
+      ctx.scroll = [sc.scroll[1], el ? Math.min(offsetIn(res, el) - 24, res.scrollHeight - res.clientHeight) : 0];
+    }
+    const tel = sc.trace && doc.querySelector('#trace ' + sc.trace);
+    ctx.traceTo = tel ? offsetIn(tr, tel) - 140 : tr.scrollHeight;
+    tr.scrollTop = sc.trace ? Math.max(ctx.traceTo - 500, 0) : tr.scrollHeight;
+    ctx.traceFrom = tr.scrollTop;
+    if (sc.type) doc.querySelector('#desc').value = '';
+    if (sc.landing_scroll) {
+      const inner = doc.querySelector('#view iframe');
+      ctx.landing = inner;
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  }
+  if (sc.view === 'docs') { ddoc.scrollingElement.scrollTop = 0; ctx.docsMax = ddoc.scrollingElement.scrollHeight - dwin.innerHeight; }
+  return true;
+};
+
+window.frame = t => {
+  const sc = TL.scenes[current], p = (t - sc.start) / sc.dur;
+  // fade across view changes
+  const prev = TL.scenes[current - 1], next = TL.scenes[current + 1];
+  let fade = 0;
+  if (prev && prev.view !== sc.view) fade = Math.max(fade, 1 - (t - sc.start) / .35);
+  if (next && next.view !== sc.view) fade = Math.max(fade, 1 - (sc.start + sc.dur - t) / .35);
+  $('#fade').style.opacity = Math.max(0, Math.min(1, fade));
+
+  if (sc.view === 'app') {
+    const res = doc.querySelector('#results'), tr = doc.querySelector('#trace');
+    if (ctx.scroll) res.scrollTop = ctx.scroll[0] + (ctx.scroll[1] - ctx.scroll[0]) * ease((p - .2) / .55);
+    if (sc.trace) tr.scrollTop = ctx.traceFrom + (ctx.traceTo - ctx.traceFrom) * ease((p - .1) / .4);
+    if (sc.type) {
+      const text = TL_desc(), n = Math.round(text.length * ease((p - .08) / .5));
+      doc.querySelector('#desc').value = text.slice(0, n);
+    }
+    if (ctx.landing) {
+      try {
+        const iw = ctx.landing.contentWindow, max = iw.document.scrollingElement.scrollHeight - iw.innerHeight;
+        iw.scrollTo(0, max * .55 * ease((p - .15) / .75));
+      } catch (e) {}
+    }
+    ring(sc.ring || (sc.type && '#go'), p);
+  } else {
+    ring(null, p);
+  }
+  if (sc.view === 'docs') {
+    ddoc.scrollingElement.scrollTop = ctx.docsMax * ease((p - .12) / .8);
+    dwin.markActive && dwin.markActive();
+  }
+
+  const cap = TL.captions.find(c => t >= c.start - .05 && t <= c.end + .3);
+  $('#caption').hidden = !cap;
+  if (cap) $('#caption span').textContent = cap.text;
+};
+
+function TL_desc() { return TL.description; }
+
+function ring(sel, p) {
+  const el = sel && doc.querySelector(sel);
+  const on = el && p > .45 && p < .96;
+  $('#ring').hidden = !on;
+  if (!on) return;
+  const r = el.getBoundingClientRect(), vp = $('.viewport').getBoundingClientRect();
+  const x = Math.max(vp.left + r.left * SCALE - 10, vp.left + 4), y = Math.max(vp.top + r.top * SCALE - 10, vp.top + 4);
+  const x2 = Math.min(vp.left + r.right * SCALE + 10, vp.right - 4), y2 = Math.min(vp.top + r.bottom * SCALE + 10, vp.bottom - 4);
+  Object.assign($('#ring').style, {left: x + 'px', top: y + 'px', width: Math.max(x2 - x, 0) + 'px', height: Math.max(y2 - y, 0) + 'px',
+    opacity: Math.min(1, (p - .45) / .08)});
+}
+</script>
+</body>
+</html>

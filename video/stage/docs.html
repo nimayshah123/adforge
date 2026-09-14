@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 Inter,system-ui,sans-serif;color:#16181d;background:#f6f5f2}
+aside{position:fixed;left:0;top:0;bottom:0;width:260px;background:#fff;border-right:1px solid #e4e2dc;padding:22px 16px}
+aside h1{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#6b6f78;margin:0 0 14px}
+aside a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;color:#16181d;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:13px}
+aside a.on{background:#16181d;color:#fff}
+aside a small{margin-left:auto;color:#9a9ea6;font-family:Inter;font-size:11px}
+aside a.on small{color:#c9ccd3}
+main{margin-left:260px;padding:26px 34px 400px}
+section{background:#fff;border:1px solid #e4e2dc;border-radius:14px;padding:20px 22px;margin-bottom:22px}
+h2{margin:0 0 4px;font-size:18px;font-family:'JetBrains Mono',monospace;font-weight:500}
+.sub{color:#6b6f78;margin:0 0 14px}
+.imgs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.imgs img{width:100%;border-radius:10px;display:block;border:1px solid #e4e2dc}
+.imgs p{margin:6px 0 0;font-size:12px;color:#6b6f78}
+.sheet{overflow:hidden;border:1px solid #d9dce1;border-radius:8px}
+table{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}
+th{background:#eef0f3;font-weight:600;text-align:left}
+td,th{border:1px solid #e3e5e9;padding:6px 8px;vertical-align:top;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:nth-child(even) td{background:#fafbfc}
+td.rn,th.rn{width:34px;text-align:center;color:#9a9ea6;background:#f3f4f6}
+pre{margin:0;background:#16181d;color:#e6e6e6;border-radius:10px;padding:16px 18px;font:12.5px/1.55 'JetBrains Mono',monospace;white-space:pre-wrap;max-height:none}
+.k{color:#8fb3ff}.s{color:#b9e3a0}.n{color:#ffcc80}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{border:1px solid #e4e2dc;border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;letter-spacing:-.02em}
+.kpi span{color:#6b6f78;font-size:12px}
+</style>
+</head>
+<body>
+<aside>
+  <h1>campaign-test-3.zip</h1>
+  <a href="#creatives" data-s="creatives">creatives/ <small>PNG</small></a>
+  <a href="#meta" data-s="meta">meta_ads.csv <small>CSV</small></a>
+  <a href="#google" data-s="google">google_ads.csv <small>CSV</small></a>
+  <a href="#campaign" data-s="campaign">campaign.json <small>JSON</small></a>
+  <a href="#landing" data-s="landing">landing/index.html <small>HTML</small></a>
+</aside>
+<main>
+  <section id="summary"><h2>Launch kit</h2><p class="sub">Everything needed to launch, from one sentence.</p><div class="kpis" id="kpis"></div></section>
+  <section id="creatives"><h2>creatives/</h2><p class="sub">Final 1080x1080 images, one per Meta ad, after the tournament, rematch and critic fixes.</p><div class="imgs" id="imgs"></div></section>
+  <section id="meta"><h2>meta_ads.csv</h2><p class="sub">One ad set per audience segment, ready for bulk upload.</p><div class="sheet" id="metaT"></div></section>
+  <section id="google"><h2>google_ads.csv</h2><p class="sub">Google Ads Editor columns: keywords with match types, 15 headlines, 4 descriptions, paths.</p><div class="sheet" id="googleT"></div></section>
+  <section id="campaign"><h2>campaign.json</h2><p class="sub">The whole run as data: brief, research, strategy, copy, creatives, critic, plan.</p><pre id="json"></pre></section>
+  <section id="landing"><h2>landing/index.html</h2><p class="sub">Single-file landing page with tracked links pointing at it.</p><pre id="links"></pre></section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function parseCSV(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => x));
+}
+
+function sheet(rows, cols, maxRows) {
+  const head = rows[0];
+  const idx = cols.map(c => head.indexOf(c)).filter(i => i >= 0);
+  return `<table><tr><th class="rn"></th>${idx.map(i => `<th>${esc(head[i])}</th>`).join('')}</tr>` +
+    rows.slice(1, maxRows + 1).map((r, n) => `<tr><td class="rn">${n + 2}</td>${idx.map(i => `<td>${esc(r[i])}</td>`).join('')}</tr>`).join('') + '</table>';
+}
+
+function highlight(obj) {
+  return esc(JSON.stringify(obj, null, 2))
+    .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+    .replace(/: "([^"]*)"/g, ': <span class="s">"$1"</span>')
+    .replace(/: (\d[\d.]*)/g, ': <span class="n">$1</span>');
+}
+
+(async () => {
+  const [metaCsv, googleCsv, camp] = await Promise.all([
+    fetch('docs/meta_ads.csv').then(r => r.text()), fetch('docs/google_ads.csv').then(r => r.text()), fetch('docs/campaign.json').then(r => r.json())]);
+  const plan = camp.plan;
+  $('#kpis').innerHTML = [
+    [`$${plan.monthly_budget_usd}`, 'monthly budget'],
+    ...plan.channels.map(c => [`$${c.daily_usd}/day`, c.channel.replace('_', ' ')]),
+    [String(camp.meta.ads.length + camp.google.ad_groups.length), 'ads and ad groups'],
+  ].map(([b, s]) => `<div class="kpi"><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join('');
+  $('#imgs').innerHTML = camp.creatives.map((c, i) =>
+    `<div><img src="app/runs/test-3/${c.png}"><p>${esc(camp.meta.ads[i].headline)} · ${esc(c.direction)}</p></div>`).join('');
+  const meta = parseCSV(metaCsv), google = parseCSV(googleCsv);
+  $('#metaT').innerHTML = sheet(meta, ['Ad Set Name', 'Daily Budget', 'Age Min', 'Age Max', 'Primary Text', 'Headline', 'Call to Action', 'Image File'], 6);
+  const gRows = google.slice(1), rowType = google[0].indexOf('Row Type');
+  const ordered = [google[0], ...gRows.filter(r => r[rowType] === 'Ad'), ...gRows.filter(r => r[rowType] !== 'Ad')];  // ads with headlines first
+  $('#googleT').innerHTML = sheet(ordered, ['Ad Group', 'Row Type', 'Keyword', 'Criterion Type', 'Headline 1', 'Headline 2', 'Headline 3', 'Description 1'], 12);
+  const brief = {brief: {brand_name: camp.brief.brand_name, goal: camp.brief.goal, offer: camp.brief.offer, monthly_budget_usd: camp.brief.monthly_budget_usd},
+    strategy: {big_idea: camp.strategy.big_idea, segments: camp.strategy.segments.map(s => s.name)},
+    plan: {channels: plan.channels.map(c => ({channel: c.channel, monthly_usd: c.monthly_usd, daily_usd: c.daily_usd}))}};
+  $('#json').innerHTML = highlight(brief);
+  $('#links').textContent = [...plan.meta_links, ...plan.google_links].map(l => l.replace(/^(https?:\/\/[^/]+\/)?runs\//, 'https://adforge-replay.vercel.app/runs/')).join('\n');
+  await Promise.all([...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
+  window.docsReady = true;
+})();
+
+window.markActive = () => {
+  let on = 'creatives';
+  for (const s of ['creatives', 'meta', 'google', 'campaign', 'landing']) {
+    if (document.getElementById(s).getBoundingClientRect().top < innerHeight * .45) on = s;
+  }
+  document.querySelectorAll('aside a').forEach(a => a.classList.toggle('on', a.dataset.s === on));
+};
+</script>
+</body>
+</html>

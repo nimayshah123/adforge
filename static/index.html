@@ -336,13 +336,35 @@ function renderView(){
   }
   $('#view').innerHTML = V[current](S[current]);
 }
+// Used by the video recorder to show the run exactly as it was after event n, and to open a tab.
+window.showUpTo = n => {
+  $('#steps').innerHTML = ''; steps = {}; revealed = new Set();
+  S.events.slice(0, n + 1).forEach(ev => {
+    onEvent(ev);
+    if (ev.type === 'artifact') revealed.add(ev.key === 'creatives' ? 'meta' : ev.key);
+  });
+  $('#clock').textContent = n >= 0 ? fmt(S.events[n].t) : '0:00';
+  $('#totals').innerHTML = '';
+  if (n >= S.events.length - 1) { revealed = null; renderTotals(); }
+  renderTabs();
+};
+window.showTab = k => {
+  current = k; pinned = true; renderTabs();
+  if (k) renderView(); else $('#view').innerHTML = '<p class="empty">One sentence in. Brief, research, strategy, ads, images, landing page and export out.</p>';
+};
+
 if (STATIC) {
   $('#banner').hidden = false;
   $('#go').hidden = true;
   $('#desc').readOnly = true;
   $('#skip').onclick = () => replay($('#past').value || S.id, true);
   $('#replay').onclick = () => replay($('#past').value || S.id);
-  refreshPast().then(async () => { const runs = await getRuns(); if (runs.length) { $('#past').value = runs[0].id; replay(runs[0].id); } });
+  refreshPast().then(async () => {
+    const runs = await getRuns();
+    if (!runs.length) return;
+    $('#past').value = runs[0].id;
+    if (!location.search.includes('noauto')) replay(runs[0].id);  // the video recorder drives the page itself
+  });
 } else {
   refreshPast();
 }

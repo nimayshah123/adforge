@@ -1,0 +1,15 @@
+[
+  {"id": "intro", "text": "This is AdForge. You type one sentence about what you want to advertise, and it builds the whole ad campaign. Here is a real run, from start to finish."},
+  {"id": "prompt", "text": "The sentence: get remote workers in Austin to subscribe to Bean Drop, a forty dollar a month cold brew delivery."},
+  {"id": "brief", "text": "First, a brief. Anything the sentence did not say, like the budget or the offer, is written down as an assumption instead of being guessed silently."},
+  {"id": "research", "text": "Then research on the live web. Seven real searches find the closest competitors, their pricing and their ad angles, with a source link for every audience insight."},
+  {"id": "strategy", "text": "Opus writes the strategy: one big idea, three audience segments with Meta targeting, a budget split, and a brand kit."},
+  {"id": "copy", "text": "Next come the Meta and Google ads. Models cannot count characters, so code checks every headline against the platform limit and sends exact violations back."},
+  {"id": "moodboard", "text": "For the visuals, a headless browser searches Pinterest. Opus studies the boards, lists the cliches every coffee ad uses, and writes three very different visual styles."},
+  {"id": "tournament", "text": "Each ad gets three designs, written as HTML and rendered in a real browser. If any message text lands off the canvas or under another element, the browser measures it and the design goes back."},
+  {"id": "judge", "text": "A harsh judge scores every design on stop power, legibility and brand fit. The winner gets a polish, and the polish has to beat the original head to head. Here, two polishes lost."},
+  {"id": "critic", "text": "Before launch, a critic opens the actual images and checks the copy and ad policy. It failed all five assets, and a fix round repaired only what it flagged."},
+  {"id": "landing", "text": "It also builds the landing page, with the lead form wired in by code, not left to the model."},
+  {"id": "docs", "text": "The result is a launch kit: budgets per channel, tracked links, a Meta upload sheet, a Google Ads Editor sheet, the campaign file, and every final image."},
+  {"id": "outro", "text": "Thirty three model steps, from one sentence. The code is on GitHub, and the full replay is live at adforge replay dot vercel dot app."}
+]
