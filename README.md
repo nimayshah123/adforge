@@ -45,7 +45,7 @@ python -m venv .venv
 .venv/Scripts/python -m uvicorn app:app --port 8000
 ```
 
-Open http://localhost:8000. A full run takes around 10 to 15 minutes.
+Open http://localhost:8000. A full run takes 30 to 50 minutes (the design tournament is most of it).
 
 ## Public replay site
 
